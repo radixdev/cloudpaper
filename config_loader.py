@@ -1,8 +1,12 @@
 import json
+import os,sys
 
 class ConfigLoader(object):
 	def __init__(self):
-		with open("cloudpaper-config.json") as data_file:
+		curDir = os.path.dirname(os.path.abspath(sys.argv[0]))
+		filename = "cloudpaper-config.json"
+		fileAbsolutePath = os.path.join(curDir, filename)
+		with open(fileAbsolutePath) as data_file:
 			self.config = json.load(data_file)
 
 	def getDropboxAccessToken(self):
