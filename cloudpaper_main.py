@@ -13,7 +13,7 @@ import dropbox
 
 CURRENT_DIRECTORY = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-def getFileAgeInDaysFromMetadata(self, timeString):
+def getFileAgeInDaysFromMetadata(timeString):
     # remove the +0000 from the end of the string since %z isn't always supported
     mTime = timeString[0:-6]
     timestamp = time.mktime(datetime.datetime.strptime(mTime, "%a, %d %b %Y %H:%M:%S").timetuple())
@@ -113,16 +113,12 @@ class DropboxUploader(object):
         return result
 
     def run(self):
-        if not self.shouldUpload:
-            print "UPLOAD OFF. RETURNING"
-            return
-
         # find the files
         filesInTmpFolder = os.listdir(self.DOWNLOAD_DIRECTORY)
 
-        if (len(filesInTmpFolder) < 3):
-            print "Not enough files (%i present) in tmp folder for upload. Skipping for now" % len(filesInTmpFolder)
-            return
+        # if (len(filesInTmpFolder) < 3):
+        #     print "Not enough files (%i present) in tmp folder for upload. Skipping for now" % len(filesInTmpFolder)
+        #     return
 
         # we're good to go
         self.setupDropboxAPI()
@@ -137,7 +133,8 @@ class DropboxUploader(object):
             else:
                 # upload the file
                 f = open(fileFullPath, 'rb')
-                self.client.put_file('/wallpaper changer/wallpapers/' + filename, f)
+                if self.shouldUpload:
+                    self.client.put_file('/wallpaper changer/wallpapers/' + filename, f)
                 f.close()
 
             # delete the file
@@ -155,7 +152,7 @@ if __name__ == '__main__':
     print datetime.datetime.now()
 
     WPD = WallPaperDownloader()
-    WPD.run()
+    # WPD.run()
 
     DBU = DropboxUploader()
     DBU.run()

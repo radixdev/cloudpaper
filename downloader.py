@@ -57,10 +57,10 @@ class WallPaperDownloader(object):
     if (self.config.getIsDebug()):
       print "running on debug values now. god help us all"
       self.IMGUR_WAIT_SECONDS = 0
-      self.downloadFiles = False
+      # self.downloadFiles = False
     else:
       self.IMGUR_WAIT_SECONDS = self.config.getImgurWaitSeconds()
-      self.downloadFiles = True
+      # self.downloadFiles = True
 
     self.r = praw.Reddit(user_agent='subreddit wallpaper downloader /u/call_me_miguel')
 
@@ -90,20 +90,19 @@ class WallPaperDownloader(object):
       os.makedirs(self.DOWNLOAD_DIRECTORY)
 
   def downloadUrl(self, url, extension, name):
-    if not self.downloadFiles: 
-      print 'downloadFiles is false . not downloading: ',url, extension, name
-      return
-
     if extension == "":
       return
       
     if name is "":
       print "no name for file! random one given"
-      name = str(randint(1,65536))
+      name = str(randint(1,65536)) + url
       
     if not logger.isIdInList(url):   
       logger.addID(url)
-      downloadPath = os.path.join(self.DOWNLOAD_DIRECTORY, name + "." + extension)     
+      downloadPath = os.path.join(self.DOWNLOAD_DIRECTORY, name + "." + extension)   
+      # params are used to fool user-agent checks (like i.reddit using Cloudflare)  
+      # see http://stackoverflow.com/questions/2364593/urlretrieve-and-user-agent-python
+      urllib.URLopener.version = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36 SE 2.X MetaSr 1.0'
       urllib.urlretrieve(url, downloadPath)
       
       print "download sucessful", url, extension, name, downloadPath
@@ -259,8 +258,3 @@ if __name__ == '__main__':
   print "testing the code itself"
   W = WallPaperDownloader()
   W.run()
-  # W.isDownloadFolderTooLarge()
-  # print get_size(W.DOWNLOAD_DIRECTORY) / 1e6
-
-  # config = ConfigLoader.ConfigLoader()
-  # print config.getWatchedSubreddits()
