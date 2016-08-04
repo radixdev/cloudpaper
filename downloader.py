@@ -174,7 +174,8 @@ class WallPaperDownloader(object):
             # Super sloppy way of doing it (should hard save the id somewhere) but fuck it
             id_logger.remove(redditId)
             break
-          self.handleUrl(image.link,subName, imgur_object.id)
+
+          self.handleUrl(image.link, subName, redditId, albumName=imgur_object.id)
           
         return True
    
@@ -206,7 +207,7 @@ class WallPaperDownloader(object):
           return False
 
         # the filename should consist of the url (unique) and sub name
-        imageFilename = "%s_ni_%s" % (stringHashcode(url), subName)
+        imageFilename = "%s_%s_ni_%s" % (redditId, stringHashcode(url), subName)
         self.downloadUrl(url, image_type, imageFilename)
         return True
       else:
@@ -252,7 +253,8 @@ class WallPaperDownloader(object):
           if (s.score > self.config.getDownloaderMinVotes()):
             self.handleUrl(s.url, s.subreddit.__str__(), s.id)
           else:
-            print "post skipped due to low upvote count"
+            if (self.config.getIsDebug()):
+              print "post skipped due to low upvote count"
       logger.saveIDs()
 
 if __name__ == '__main__':
