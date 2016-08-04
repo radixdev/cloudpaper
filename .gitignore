@@ -1,5 +1,6 @@
 cloudpaper-config.json
 tmp/
+past_ids_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

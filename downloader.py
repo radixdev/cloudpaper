@@ -150,7 +150,6 @@ class WallPaperDownloader(object):
     
     #imgur vs not
     if "imgur.com" in url:
-      return
       time.sleep(self.IMGUR_WAIT_SECONDS)
       
       #is imgur, check for pic, gif, or album
@@ -252,6 +251,8 @@ class WallPaperDownloader(object):
           # no shitty submissions
           if (s.score > self.config.getDownloaderMinVotes()):
             self.handleUrl(s.url, s.subreddit.__str__(), s.id)
+          else:
+            print "post skipped due to low upvote count"
       logger.saveIDs()
 
 if __name__ == '__main__':
