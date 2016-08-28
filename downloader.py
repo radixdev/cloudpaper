@@ -172,7 +172,7 @@ class WallPaperDownloader(object):
             # To retry downloading the album later, remove it from the set of stored ids
             # If it's still popular, the download will re-commence later
             # Super sloppy way of doing it (should hard save the id somewhere) but fuck it
-            id_logger.remove(redditId)
+            logger.removeID(redditId)
             break
 
           self.handleUrl(image.link, subName, redditId, albumName=imgur_object.id)

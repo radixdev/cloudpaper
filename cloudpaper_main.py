@@ -76,7 +76,10 @@ class DropboxUploader(object):
                 if (isFileTooOld and isFilenameTemporary):
                     print 'deleting file', fileAgeInDays, filePath
                     # delete!
-                    self.client.file_delete(filePath)
+                    try:
+                        self.client.file_delete(filePath)
+                    except Exception, e:
+                        print e
 
     def doesFileExistInWallpapers(self, filename):
         # As a safeguard, check if the file already exists! 
@@ -116,9 +119,9 @@ class DropboxUploader(object):
         # find the files
         filesInTmpFolder = os.listdir(self.DOWNLOAD_DIRECTORY)
 
-        # if (len(filesInTmpFolder) < 3):
-        #     print "Not enough files (%i present) in tmp folder for upload. Skipping for now" % len(filesInTmpFolder)
-        #     return
+        if (len(filesInTmpFolder) < 3):
+            print "Not enough files (%i present) in tmp folder for upload. Skipping for now" % len(filesInTmpFolder)
+            return
 
         # we're good to go
         self.setupDropboxAPI()
@@ -152,7 +155,7 @@ if __name__ == '__main__':
     print datetime.datetime.now()
 
     WPD = WallPaperDownloader()
-    # WPD.run()
+    WPD.run()
 
     DBU = DropboxUploader()
     DBU.run()
