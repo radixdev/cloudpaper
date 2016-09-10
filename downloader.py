@@ -169,10 +169,11 @@ class WallPaperDownloader(object):
         for image in imgur_object.images:
           if (self.isDownloadFolderTooLarge()):
             print "Early exiting large imgur album download. album: " + url
+            # Note, the following was a bad idea and produces unknown yet very buggy behavior
             # To retry downloading the album later, remove it from the set of stored ids
             # If it's still popular, the download will re-commence later
             # Super sloppy way of doing it (should hard save the id somewhere) but fuck it
-            logger.removeID(redditId)
+            # logger.removeID(redditId)
             break
 
           self.handleUrl(image.link, subName, redditId, albumName=imgur_object.id)
