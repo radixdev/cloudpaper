@@ -45,6 +45,12 @@ class ConfigLoader(object):
 	def getTargetScreenAspectRatio(self):
 		return self.config["target_screen_width"] / self.config["target_screen_height"]
 
+	def getRedditClientId(self):
+		return self.config['reddit_client_id']
+
+	def getRedditClientSecret(self):
+		return self.config['reddit_client_secret']
+
 if __name__ == "__main__":
 	C = ConfigLoader()
 	print C.getDropboxAccessToken()
@@ -59,3 +65,5 @@ if __name__ == "__main__":
 	print C.getMaxTempFolderSizeMB()
 	print C.getDropboxUploadEnabled()
 	print C.getTargetScreenAspectRatio()
+	print C.getRedditClientId()
+	print C.getRedditClientSecret()

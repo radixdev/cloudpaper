@@ -62,7 +62,9 @@ class WallPaperDownloader(object):
       self.IMGUR_WAIT_SECONDS = self.config.getImgurWaitSeconds()
       # self.downloadFiles = True
 
-    self.r = praw.Reddit(user_agent='subreddit wallpaper downloader /u/call_me_miguel')
+    self.r = praw.Reddit(user_agent='subreddit wallpaper downloader /u/call_me_miguel',
+      client_id = self.config.getRedditClientId(),
+      client_secret = self.config.getRedditClientSecret())
 
     #pyimgur data
     IMGUR_CLIENT_ID_LIST = self.config.getImgurClientIds()
@@ -75,9 +77,9 @@ class WallPaperDownloader(object):
     for clientIDString in IMGUR_CLIENT_ID_LIST:
       handler = pyimgur.Imgur(clientIDString)
       self.imgurHandlerList.append(handler)
-      
+
     self.imgurID_index = 0
-    
+
     #subreddits to scan for wallpapers
     self.subredditList = self.config.getWatchedSubreddits()
 
@@ -92,19 +94,19 @@ class WallPaperDownloader(object):
   def downloadUrl(self, url, extension, name):
     if extension == "":
       return
-      
+
     if name is "":
       print "no name for file! random one given"
       name = str(randint(1,65536)) + url
-      
-    if not logger.isIdInList(url):   
+
+    if not logger.isIdInList(url):
       logger.addID(url)
-      downloadPath = os.path.join(self.DOWNLOAD_DIRECTORY, name + "." + extension)   
-      # params are used to fool user-agent checks (like i.reddit using Cloudflare)  
+      downloadPath = os.path.join(self.DOWNLOAD_DIRECTORY, name + "." + extension)
+      # params are used to fool user-agent checks (like i.reddit using Cloudflare)
       # see http://stackoverflow.com/questions/2364593/urlretrieve-and-user-agent-python
       urllib.URLopener.version = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36 SE 2.X MetaSr 1.0'
       urllib.urlretrieve(url, downloadPath)
-      
+
       print "download sucessful", url, extension, name, downloadPath
     else:
       print("already downloaded image "+url+" with filename "+name+ "."+extension)
@@ -119,39 +121,39 @@ class WallPaperDownloader(object):
 
   def getImgurAPIhandler(self):
     #cycle through the api keys to hack the api timeouts, returns imgur handler
-    
+
     #get the handler we're gonna return
     imgur_handler = self.imgurHandlerList[self.imgurID_index]
-    
+
     #increment the index
     self.imgurID_index = (self.imgurID_index + 1) % len(self.imgurHandlerList)
-    
+
     return imgur_handler
 
   def isGoodImage(self,link, width, height):
     #must have good dimensions
     imageAspectRatioFloat = float(width) / float(height)
     goodDim = abs( imageAspectRatioFloat - self.myScreen ) < 0.05
-    
+
     #must be horizontal
     isHorizontal = (width >= height)
-    
+
     #must be high res
     isHighRes = width > 1800
 
     usingThisImage = (goodDim and isHorizontal and isHighRes)
     imageInfoFormatArgs = (usingThisImage, str(link), width, height, goodDim, isHorizontal, isHighRes)
     print "(%r) || link=%s || w=%i h=%i || goodDim=%r isHorizontal=%r isHighRes=%r" % imageInfoFormatArgs
-    
+
     return usingThisImage
-  
+
   def handleUrl(self, url, subName, redditId, albumName=""):
     #returns whether we handled the url or not
-    
+
     #imgur vs not
     if "imgur.com" in url:
       time.sleep(self.IMGUR_WAIT_SECONDS)
-      
+
       #is imgur, check for pic, gif, or album
       imgur_object = None
       try:
@@ -159,9 +161,9 @@ class WallPaperDownloader(object):
       except Exception as e:
         print e
         return
-      
+
       imageTypeName = type(imgur_object).__name__.lower()
-      
+
       #album, gallery or otherwise
       if ("album" in imageTypeName):
         print 'going through the rabbit hole with length:', len(imgur_object.images)
@@ -177,9 +179,9 @@ class WallPaperDownloader(object):
             break
 
           self.handleUrl(image.link, subName, redditId, albumName=imgur_object.id)
-          
+
         return True
-   
+
       #image, gallery or otherwise
       if ("image" in imageTypeName):
         #gif or image?
@@ -187,7 +189,7 @@ class WallPaperDownloader(object):
           #is an image!
           if not self.isGoodImage(imgur_object.link, imgur_object.width, imgur_object.height):
             return False
-          
+
           extension = self.getFileTypeFromLink(url)
           imageFilename = imgur_object.id + "_"+subName
 
@@ -198,7 +200,7 @@ class WallPaperDownloader(object):
           # print imageFilename, albumName
           self.downloadUrl(url, extension, imageFilename)
         return True
-        
+
     else:
       # fuck non imgur links... no longer!
       # Do a partial download of the file to glean the resolution
@@ -215,7 +217,7 @@ class WallPaperDownloader(object):
         # Nothing we can do
         print "skipping on url:" + url
         return False
-      
+
     return False
 
   # Returns a tuple of (image_type, width, height)
@@ -229,7 +231,7 @@ class WallPaperDownloader(object):
     except Exception,e:
       print e
       return (None, -1, -1)
-  
+
   # return true if the folder is already too large
   def isDownloadFolderTooLarge(self):
     return (get_size_mb(self.DOWNLOAD_DIRECTORY) > self.config.getMaxTempFolderSizeMB())
@@ -238,7 +240,7 @@ class WallPaperDownloader(object):
     #get submissions
     #download!
     for subreddit in self.subredditList:
-      submissions = self.r.get_subreddit(subreddit).get_hot(limit=100)
+      submissions = self.r.subreddit(subreddit).hot(limit=100)
 
       for s in submissions:
         if (self.isDownloadFolderTooLarge()):
@@ -246,7 +248,7 @@ class WallPaperDownloader(object):
           logger.saveIDs()
           return
 
-        if not logger.isIdInList(s.id): 
+        if not logger.isIdInList(s.id):
           print "subreddit %s and post id %s" % (subreddit, s.id)
           logger.addID(s.id)
 
