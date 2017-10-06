@@ -1,6 +1,7 @@
 # files ending with "keep" are not pruned from the wallpapers dropbox folder.
 
-import time, datetime
+import time
+from datetime import datetime
 import os       #do some system operations
 import sys #dump output to files
 import shutil
@@ -11,14 +12,9 @@ import dropbox
 
 CURRENT_DIRECTORY = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-def getFileAgeInDaysFromMetadata(timeString):
-    # remove the +0000 from the end of the string since %z isn't always supported
-    mTime = timeString[0:-6]
-    timestamp = time.mktime(datetime.datetime.strptime(mTime, "%a, %d %b %Y %H:%M:%S").timetuple())
-    mTimeSecondsDelta = (time.time()-timestamp)
-    mTimeDaysDelta = mTimeSecondsDelta / 82800
-    # print mTimeDaysDelta
-    return mTimeDaysDelta
+# gets the age in days from today
+# def calculateAge(born):
+#     return (datetime.now() - born).days
 
 class DropboxUploader(object):
     def __init__(self):
@@ -62,24 +58,24 @@ class DropboxUploader(object):
             print "PRUNING OFF. RETURNING"
             return
 
-        folderContents = self.folderMetadata["contents"]
+        # Iterate over each entry and get its age
+        entriesToDelete = []
+        for entry in self.allEntries:
+            # is the file old enough?
+            fileAgeInDays = (datetime.now() - entry.server_modified).days
+            isFileTooOld = fileAgeInDays > self.config.getPruneAgeDays()
 
-        for content in folderContents:
-            if (not content["is_dir"]):
-                # it's a file! client_mtime
-                fileAgeInDays = getFileAgeInDaysFromMetadata(content["modified"])
-                filePath = content["path"]
+            # can we even delete this file?
+            isFilenameTemporary = not ("_keep" in entry.name)
 
-                isFileTooOld = fileAgeInDays > self.config.getPruneAgeDays()
-                isFilenameTemporary = not ("_keep" in filePath)
+            if (isFileTooOld and isFilenameTemporary):
+                print 'marking file for batch deletion', fileAgeInDays, filePath
+                entriesToDelete.append(entry)
 
-                if (isFileTooOld and isFilenameTemporary):
-                    print 'deleting file', fileAgeInDays, filePath
-                    # delete!
-                    try:
-                        self.client.file_delete(filePath)
-                    except Exception, e:
-                        print e
+        # pass the marked entries for batch deletion
+        if (len(entriesToDelete) > 0):
+            print "not actually batch deleting files just yet!"
+            # self.client.files_delete_batch(entriesToDelete)
 
     # record all the existing wallpaper paths, continuing via cursor if needed
     def getAllWallpaperEntries(self):
