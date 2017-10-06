@@ -73,7 +73,7 @@ class DropboxUploader(object):
 
         # pass the marked entries for batch deletion
         if (len(entriesToDelete) > 0):
-            print "batch deleting files #" , len(entriesToDelete) 
+            print "batch deleting files #" , len(entriesToDelete)
             self.client.files_delete_batch(entriesToDelete)
 
     # record all the existing wallpaper paths, continuing via cursor if needed
@@ -128,10 +128,10 @@ class DropboxUploader(object):
                 print "Not uploading file %r. Already exists in wallpapers directory!" % (fileFullPath)
             else:
                 # upload the file
-                f = open(fileFullPath, 'rb')
+                # see https://stackoverflow.com/a/33828537
                 if self.shouldUpload:
-                    self.client.put_file('/wallpaper changer/wallpapers/' + filename, f)
-                f.close()
+                    with open(fileFullPath, 'rb') as f:
+                        self.client.files_upload(f.read(), '/wallpaper changer/wallpapers/' + filename)
 
             # delete the file
             print("deleting file at path " + fileFullPath)
