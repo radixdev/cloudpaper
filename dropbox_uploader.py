@@ -52,13 +52,10 @@ class DropboxUploader(object):
         access_token = self.config.getDropboxAccessToken()
         print "getting client"
         self.client = dropbox.Dropbox(access_token)
-        # self.folderMetadata = self.client.files_get_metadata("/wallpaper changer/wallpapers")
-        # print(self.folderMetadata)
-        # self.allFolderContentPaths = self.getAllWallpaperPaths()
-
-        folderResult = self.client.files_list_folder("/wallpaper changer/wallpapers")
-        print(folderResult.has_more)
         self.getAllWallpaperEntries()
+
+        # Create a set of all the entry paths
+        self.createEntryPathSet()
 
     def pruneWallpapers(self):
         if not self.shouldPrune:
@@ -86,76 +83,35 @@ class DropboxUploader(object):
 
     # record all the existing wallpaper paths, continuing via cursor if needed
     def getAllWallpaperEntries(self):
-        paths = []
+        entries = []
         folderResult = self.client.files_list_folder("/wallpaper changer/wallpapers")
 
         if (folderResult is None):
-            print "fuck"
-            return paths
+            print "folder result was null"
+            return entries
 
+        shouldContinue = True
         while (shouldContinue):
             for entry in folderResult.entries:
-                print entry.path_lower
-                paths.append(entry)
+                entries.append(entry)
 
             # determine if we continue or not
             shouldContinue = folderResult.has_more
             if (shouldContinue):
-                print("continuing on cursor")
-                self.client.files_list_folder(folderResult.cursor)
+                # continue on cursor for the next loop
+                folderResult = self.client.files_list_folder_continue(folderResult.cursor)
 
+        self.allEntries = entries
 
-        # get all the results and merge them all
-        # print(folderResult.has_more)
-        #
-        # shouldContinue = true
-        # while (shouldContinue):
-        #     # get our entries
-        #     for entry in folderResult:
-        #         paths = paths + entry["path_lower"]
-        #
-        #     shouldContinue = folderResult.has_more
-            # Get the next folder result
+    def createEntryPathSet(self):
+        pathSet = set()
+        for entry in self.allEntries:
+            pathSet.add(entry.name)
 
-
-
-
-    # def getAllPathsFromFolderResult(self, result):
-
+        self.entryPathSet = pathSet
 
     def doesFileExistInWallpapers(self, filename):
-        # As a safeguard, check if the file already exists!
-        if (self.allFolderContentPaths is None):
-            # some error happened, do a manual check
-            print "running manual check for filename " + filename
-            return self.runManualCheckOfFileExistence(filename)
-
-        # how the file would appear in the metadata listing
-        localFilename = "/wallpaper changer/wallpapers/" + filename
-        # maybe presort this contents list?
-        return localFilename in self.allFolderContentPaths
-
-    # # directly makes an api call to see if the file already exists
-    # def runManualCheckOfFileExistence(self, filename):
-    #     try:
-    #         fileMD = self.client.metadata("/wallpaper changer/wallpapers/" + filename)
-    #         return True
-    #     except dropbox.rest.ErrorResponse:
-    #         print "Got dropbox.rest.ErrorResponse in doesFileExistInWallpapers for " + filename
-    #         return False
-
-    # # sets on this object every wallpaper path in the dropbox folder
-    # # returns a list of strings of relative paths
-    # def getAllWallpaperPaths(self):
-    #     result = []
-    #
-    #     fileMD = self.folderMetadata
-    #     folderContents = fileMD["contents"]
-    #     if (folderContents is not None):
-    #         for thing in folderContents:
-    #             result.append(thing["path"])
-    #
-    #     return result
+        return filename in self.entryPathSet
 
     def run(self):
         # find the files
@@ -183,7 +139,9 @@ class DropboxUploader(object):
                 f.close()
 
             # delete the file
-            os.remove(fileFullPath)
+            print("deleting file at path " + fileFullPath)
+            if self.shouldUpload:
+                os.remove(fileFullPath)
 
         # delete old files
         self.pruneWallpapers()
@@ -194,4 +152,5 @@ class DropboxUploader(object):
 if __name__ == '__main__':
     DBU = DropboxUploader()
     DBU.setupDropboxAPI()
+    DBU.pruneWallpapers()
     # DBU.run()
