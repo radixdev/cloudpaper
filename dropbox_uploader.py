@@ -50,9 +50,15 @@ class DropboxUploader(object):
     # TODO: one day this will all fail. Getting this to work will fix it
     def setupDropboxAPI(self):
         access_token = self.config.getDropboxAccessToken()
-        self.client = dropbox.client.DropboxClient(access_token)
-        self.folderMetadata = self.client.metadata("/wallpaper changer/wallpapers/", list=True)
-        self.allFolderContentPaths = self.getAllWallpaperPaths()
+        print "getting client"
+        self.client = dropbox.Dropbox(access_token)
+        # self.folderMetadata = self.client.files_get_metadata("/wallpaper changer/wallpapers")
+        # print(self.folderMetadata)
+        # self.allFolderContentPaths = self.getAllWallpaperPaths()
+
+        folderResult = self.client.files_list_folder("/wallpaper changer/wallpapers")
+        print(folderResult.has_more)
+        self.getAllWallpaperEntries()
 
     def pruneWallpapers(self):
         if not self.shouldPrune:
@@ -78,6 +84,45 @@ class DropboxUploader(object):
                     except Exception, e:
                         print e
 
+    # record all the existing wallpaper paths, continuing via cursor if needed
+    def getAllWallpaperEntries(self):
+        paths = []
+        folderResult = self.client.files_list_folder("/wallpaper changer/wallpapers")
+
+        if (folderResult is None):
+            print "fuck"
+            return paths
+
+        while (shouldContinue):
+            for entry in folderResult.entries:
+                print entry.path_lower
+                paths.append(entry)
+
+            # determine if we continue or not
+            shouldContinue = folderResult.has_more
+            if (shouldContinue):
+                print("continuing on cursor")
+                self.client.files_list_folder(folderResult.cursor)
+
+
+        # get all the results and merge them all
+        # print(folderResult.has_more)
+        #
+        # shouldContinue = true
+        # while (shouldContinue):
+        #     # get our entries
+        #     for entry in folderResult:
+        #         paths = paths + entry["path_lower"]
+        #
+        #     shouldContinue = folderResult.has_more
+            # Get the next folder result
+
+
+
+
+    # def getAllPathsFromFolderResult(self, result):
+
+
     def doesFileExistInWallpapers(self, filename):
         # As a safeguard, check if the file already exists!
         if (self.allFolderContentPaths is None):
@@ -90,27 +135,27 @@ class DropboxUploader(object):
         # maybe presort this contents list?
         return localFilename in self.allFolderContentPaths
 
-    # directly makes an api call to see if the file already exists
-    def runManualCheckOfFileExistence(self, filename):
-        try:
-            fileMD = self.client.metadata("/wallpaper changer/wallpapers/" + filename)
-            return True
-        except dropbox.rest.ErrorResponse:
-            print "Got dropbox.rest.ErrorResponse in doesFileExistInWallpapers for " + filename
-            return False
+    # # directly makes an api call to see if the file already exists
+    # def runManualCheckOfFileExistence(self, filename):
+    #     try:
+    #         fileMD = self.client.metadata("/wallpaper changer/wallpapers/" + filename)
+    #         return True
+    #     except dropbox.rest.ErrorResponse:
+    #         print "Got dropbox.rest.ErrorResponse in doesFileExistInWallpapers for " + filename
+    #         return False
 
-    # sets on this object every wallpaper path in the dropbox folder
-    # returns a list of strings of relative paths
-    def getAllWallpaperPaths(self):
-        result = []
-
-        fileMD = self.folderMetadata
-        folderContents = fileMD["contents"]
-        if (folderContents is not None):
-            for thing in folderContents:
-                result.append(thing["path"])
-
-        return result
+    # # sets on this object every wallpaper path in the dropbox folder
+    # # returns a list of strings of relative paths
+    # def getAllWallpaperPaths(self):
+    #     result = []
+    #
+    #     fileMD = self.folderMetadata
+    #     folderContents = fileMD["contents"]
+    #     if (folderContents is not None):
+    #         for thing in folderContents:
+    #             result.append(thing["path"])
+    #
+    #     return result
 
     def run(self):
         # find the files
@@ -148,4 +193,5 @@ class DropboxUploader(object):
 
 if __name__ == '__main__':
     DBU = DropboxUploader()
-    DBU.run()
+    DBU.setupDropboxAPI()
+    # DBU.run()
