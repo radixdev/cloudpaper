@@ -56,6 +56,10 @@ class DropboxUploader(object):
         # Iterate over each entry and get its age
         entriesToDelete = []
         for entry in self.allEntries:
+            if (len(entriesToDelete) > 0):
+                # safety on the batch deletion
+                continue
+
             # is the file old enough?
             fileAgeInDays = (datetime.now() - entry.server_modified).days
             isFileTooOld = fileAgeInDays > self.config.getPruneAgeDays()
@@ -69,8 +73,8 @@ class DropboxUploader(object):
 
         # pass the marked entries for batch deletion
         if (len(entriesToDelete) > 0):
-            print "not actually batch deleting files just yet!"
-            # self.client.files_delete_batch(entriesToDelete)
+            print "batch deleting files #" , len(entriesToDelete) 
+            self.client.files_delete_batch(entriesToDelete)
 
     # record all the existing wallpaper paths, continuing via cursor if needed
     def getAllWallpaperEntries(self):
