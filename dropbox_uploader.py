@@ -2,19 +2,15 @@
 
 import time
 from datetime import datetime
-import os       #do some system operations
-import sys #dump output to files
+import os
+import sys
 import shutil
-
-import config_loader as ConfigLoader
 
 import dropbox
 
-CURRENT_DIRECTORY = os.path.dirname(os.path.abspath(sys.argv[0]))
+import config_loader as ConfigLoader
 
-# gets the age in days from today
-# def calculateAge(born):
-#     return (datetime.now() - born).days
+CURRENT_DIRECTORY = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 class DropboxUploader(object):
     def __init__(self):
@@ -43,7 +39,6 @@ class DropboxUploader(object):
                     print "moved file %s to backup file since it has size %i" % (filename, os.path.getsize(fileFullPath))
                     shutil.move(fileFullPath, os.path.join(CURRENT_DIRECTORY, filename + "._backup"))
 
-    # TODO: one day this will all fail. Getting this to work will fix it
     def setupDropboxAPI(self):
         access_token = self.config.getDropboxAccessToken()
         print "getting client"
@@ -147,6 +142,6 @@ class DropboxUploader(object):
 
 if __name__ == '__main__':
     DBU = DropboxUploader()
-    DBU.setupDropboxAPI()
-    DBU.pruneWallpapers()
-    # DBU.run()
+    # DBU.setupDropboxAPI()
+    # DBU.pruneWallpapers()
+    DBU.run()
