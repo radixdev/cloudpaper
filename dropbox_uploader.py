@@ -108,16 +108,13 @@ class DropboxUploader(object):
     def doesFileExistInWallpapers(self, filename):
         return filename in self.entryPathSet
 
-    def run(self):
+    def uploadFiles(self):
         # find the files
         filesInTmpFolder = os.listdir(self.DOWNLOAD_DIRECTORY)
 
         if (len(filesInTmpFolder) < 3):
             print "Not enough files (%i present) in tmp folder for upload. Skipping for now" % len(filesInTmpFolder)
             return
-
-        # we're good to go
-        self.setupDropboxAPI()
 
         for filename in filesInTmpFolder:
             fileFullPath = os.path.join(self.DOWNLOAD_DIRECTORY, filename)
@@ -137,6 +134,13 @@ class DropboxUploader(object):
             print("deleting file at path " + fileFullPath)
             if self.shouldUpload:
                 os.remove(fileFullPath)
+
+    def run(self):
+        # we're good to go
+        self.setupDropboxAPI()
+
+        # I wonder what this method does
+        self.uploadFiles()
 
         # delete old files
         self.pruneWallpapers()
