@@ -13,3 +13,7 @@ if __name__ == '__main__':
 
     DBU = DropboxUploader()
     DBU.run()
+
+    print '  '
+    print 'done'
+    print datetime.datetime.now()

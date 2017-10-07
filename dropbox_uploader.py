@@ -18,6 +18,7 @@ class DropboxUploader(object):
         self.DOWNLOAD_DIRECTORY = os.path.join(CURRENT_DIRECTORY, "tmp")
         self.shouldPrune = self.config.getPruneEnabled()
         self.shouldUpload = self.config.getDropboxUploadEnabled()
+        self.setupDropboxAPI()
 
     # make sure the log files don't get out of hand
     def maintainSizesOfLogFiles(self):
@@ -54,12 +55,9 @@ class DropboxUploader(object):
             return
 
         # Iterate over each entry and get its age
+        # This is a list of DeleteArg objects
         entriesToDelete = []
         for entry in self.allEntries:
-            if (len(entriesToDelete) > 0):
-                # safety on the batch deletion
-                continue
-
             # is the file old enough?
             fileAgeInDays = (datetime.now() - entry.server_modified).days
             isFileTooOld = fileAgeInDays > self.config.getPruneAgeDays()
@@ -69,11 +67,11 @@ class DropboxUploader(object):
 
             if (isFileTooOld and isFilenameTemporary):
                 print 'marking file for batch deletion', fileAgeInDays, entry.name
-                entriesToDelete.append(entry)
+                entriesToDelete.append(dropbox.files.DeleteArg(entry.path_lower))
 
         # pass the marked entries for batch deletion
         if (len(entriesToDelete) > 0):
-            print "batch deleting files #" , len(entriesToDelete)
+            print "batch deleting %r files" % (len(entriesToDelete))
             self.client.files_delete_batch(entriesToDelete)
 
     # record all the existing wallpaper paths, continuing via cursor if needed
@@ -136,9 +134,6 @@ class DropboxUploader(object):
                 os.remove(fileFullPath)
 
     def run(self):
-        # we're good to go
-        self.setupDropboxAPI()
-
         # I wonder what this method does
         self.uploadFiles()
 
@@ -150,6 +145,5 @@ class DropboxUploader(object):
 
 if __name__ == '__main__':
     DBU = DropboxUploader()
-    # DBU.setupDropboxAPI()
-    # DBU.pruneWallpapers()
-    DBU.run()
+    DBU.pruneWallpapers()
+    # DBU.run()
