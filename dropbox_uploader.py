@@ -68,7 +68,7 @@ class DropboxUploader(object):
             isFilenameTemporary = not ("_keep" in entry.name)
 
             if (isFileTooOld and isFilenameTemporary):
-                print 'marking file for batch deletion', fileAgeInDays, filePath
+                print 'marking file for batch deletion', fileAgeInDays, entry.name
                 entriesToDelete.append(entry)
 
         # pass the marked entries for batch deletion
