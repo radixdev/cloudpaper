@@ -132,12 +132,11 @@ class WallPaperDownloader(object):
 
   def isGoodImage(self,link, width, height):
     #must have good dimensions
-    height = float(height)
-    if (height == 0):
-        print "height was 0"
+    if (height == 0 || width == 0):
+        print "Dimensions are invalid. Width %r Height %r" % (width, height)
         return False
 
-    imageAspectRatioFloat = float(width) / height
+    imageAspectRatioFloat = float(width) / float(height)
     goodDim = abs( imageAspectRatioFloat - self.myScreen ) < 0.05
 
     #must be horizontal
