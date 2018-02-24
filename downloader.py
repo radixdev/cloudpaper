@@ -132,7 +132,12 @@ class WallPaperDownloader(object):
 
   def isGoodImage(self,link, width, height):
     #must have good dimensions
-    imageAspectRatioFloat = float(width) / float(height)
+    height = float(height)
+    if (height == 0):
+        print "height was 0"
+        return False
+
+    imageAspectRatioFloat = float(width) / height
     goodDim = abs( imageAspectRatioFloat - self.myScreen ) < 0.05
 
     #must be horizontal
@@ -158,6 +163,7 @@ class WallPaperDownloader(object):
       imgur_object = None
       try:
         imgur_object = self.getImgurAPIhandler().get_at_url(url)
+        print(dir(imgur_object))
       except Exception as e:
         print e
         return
