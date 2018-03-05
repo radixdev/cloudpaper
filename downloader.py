@@ -132,7 +132,7 @@ class WallPaperDownloader(object):
 
   def isGoodImage(self,link, width, height):
     #must have good dimensions
-    if (height == 0 || width == 0):
+    if (height == 0 or width == 0):
         print "Dimensions are invalid. Width %r Height %r" % (width, height)
         return False
 
