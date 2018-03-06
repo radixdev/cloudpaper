@@ -162,7 +162,6 @@ class WallPaperDownloader(object):
       imgur_object = None
       try:
         imgur_object = self.getImgurAPIhandler().get_at_url(url)
-        print(dir(imgur_object))
       except Exception as e:
         print e
         return
